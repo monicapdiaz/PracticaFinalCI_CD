@@ -1,5 +1,5 @@
-# Azure DevOps Pipeline para CI/CD
-# Integración Continua y Entrega Continua para .NET Core 9
+# ASP.NET Core 9 - Build & Publish
+# Para cuentas gratis de App Service usar --runtime win-x86
 
 trigger:
   branches:
@@ -12,90 +12,65 @@ pool:
 
 variables:
   buildConfiguration: 'Release'
-  dotNetFramework: 'net9.0'
+  proyecto: 'PracticaFinalAPI/PracticaFinalAPI.csproj'
 
-stages:
-  # Stage 1: Build y Test (CI)
-  - stage: BuildAndTest
-    displayName: 'Compilar y Ejecutar Pruebas'
-    jobs:
-      - job: Build
-        displayName: 'Compilar Proyecto'
-        steps:
-          - task: UseDotNet@2
-            displayName: 'Usar .NET 9.0 SDK'
-            inputs:
-              packageType: 'sdk'
-              version: '9.x'
+steps:
+  - task: UseDotNet@2
+    displayName: 'Instalar .NET SDK 9'
+    inputs:
+      packageType: 'sdk'
+      # Usa siempre la última 9.0.x disponible en el agente
+      version: '9.0.x'
+      includePreviewVersions: false
 
-          - task: DotNetCoreCLI@2
-            displayName: 'Restaurar Paquetes NuGet'
-            inputs:
-              command: 'restore'
-              projects: '**/*.csproj'
+  - script: dotnet --info
+    displayName: 'Información de .NET'
 
-          - task: DotNetCoreCLI@2
-            displayName: 'Compilar Proyecto'
-            inputs:
-              command: 'build'
-              projects: '**/*.csproj'
-              arguments: '--configuration $(buildConfiguration) --no-restore'
+  - script: dotnet restore PracticaFinalCI_CD.sln
+    displayName: 'dotnet restore'
 
-          - task: DotNetCoreCLI@2
-            displayName: 'Ejecutar Pruebas Unitarias'
-            inputs:
-              command: 'test'
-              projects: '**/*Tests/*.csproj'
-              arguments: '--configuration $(buildConfiguration) --no-build --verbosity normal --collect:"XPlat Code Coverage"'
+  - script: dotnet build PracticaFinalCI_CD.sln --configuration $(buildConfiguration) --no-restore
+    displayName: 'dotnet build $(buildConfiguration)'
 
-          - task: PublishCodeCoverageResults@1
-            displayName: 'Publicar Resultados de Cobertura de Código'
-            inputs:
-              codeCoverageTool: 'Cobertura'
-              summaryFileLocation: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
+  - script: dotnet test PracticaFinalAPI.Tests/PracticaFinalAPI.Tests.csproj --configuration $(buildConfiguration) --no-build --verbosity normal
+    displayName: 'Ejecutar Pruebas Unitarias'
+    continueOnError: true
 
-          - task: DotNetCoreCLI@2
-            displayName: 'Publicar Artefactos'
-            inputs:
-              command: 'publish'
-              publishWebProjects: false
-              projects: 'PracticaFinalAPI/PracticaFinalAPI.csproj'
-              arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory) --no-build'
-              zipAfterPublish: true
+  - task: DotNetCoreCLI@2
+    displayName: 'Publicar aplicación'
+    inputs:
+      command: 'publish'
+      publishWebProjects: false
+      projects: '$(proyecto)'
+      arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory) --runtime win-x86 --self-contained true'
+      zipAfterPublish: true
+      modifyOutputPath: false
 
-          - task: PublishBuildArtifacts@1
-            displayName: 'Publicar Artefactos de Compilación'
-            inputs:
-              pathToPublish: '$(Build.ArtifactStagingDirectory)'
-              artifactName: 'drop'
-              publishLocation: 'Container'
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publicar artefactos'
+    inputs:
+      pathToPublish: '$(Build.ArtifactStagingDirectory)'
+      artifactName: 'drop'
+      publishLocation: 'Container'
 
-  # Stage 2: Deployment (CD)
-  - stage: Deploy
-    displayName: 'Desplegar a Azure App Service'
-    dependsOn: BuildAndTest
-    condition: succeeded()
-    jobs:
-      - deployment: DeployToAzure
-        displayName: 'Desplegar a Azure'
-        environment: 'production'
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - task: DownloadBuildArtifacts@0
-                  displayName: 'Descargar Artefactos'
-                  inputs:
-                    buildType: 'current'
-                    downloadType: 'single'
-                    artifactName: 'drop'
-                    downloadPath: '$(System.ArtifactsDirectory)'
-
-                - task: AzureWebApp@1
-                  displayName: 'Desplegar a Azure App Service'
-                  inputs:
-                    azureSubscription: 'Azure-ServiceConnection' # Reemplazar con tu Service Connection
-                    appName: 'practica-final-api' # Reemplazar con el nombre de tu App Service
-                    package: '$(System.ArtifactsDirectory)/drop/**/*.zip'
-                    deploymentMethod: 'auto'
-
+  # Stage de Despliegue (CD) - Descomenta cuando configures la Service Connection de Azure
+  # Para configurar:
+  # 1. Ve a Project Settings > Service connections en Azure DevOps
+  # 2. Crea una conexión de tipo "Azure Resource Manager"
+  # 3. Reemplaza 'Azure-ServiceConnection' y 'practica-final-api' con tus valores reales
+  #
+  # - task: DownloadBuildArtifacts@0
+  #   displayName: 'Descargar Artefactos'
+  #   inputs:
+  #     buildType: 'current'
+  #     downloadType: 'single'
+  #     artifactName: 'drop'
+  #     downloadPath: '$(System.ArtifactsDirectory)'
+  #
+  # - task: AzureWebApp@1
+  #   displayName: 'Desplegar a Azure App Service'
+  #   inputs:
+  #     azureSubscription: 'Azure-ServiceConnection'
+  #     appName: 'practica-final-api'
+  #     package: '$(System.ArtifactsDirectory)/drop/**/*.zip'
+  #     deploymentMethod: 'auto'

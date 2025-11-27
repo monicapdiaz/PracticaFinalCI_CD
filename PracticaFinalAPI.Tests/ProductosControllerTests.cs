@@ -1,17 +1,26 @@
 using Microsoft.AspNetCore.Mvc;
 using PracticaFinalAPI.Controllers;
 using PracticaFinalAPI.Models;
+using PracticaFinalAPI.Services;
 using Xunit;
+using System.Collections.Generic;
 
 namespace PracticaFinalAPI.Tests;
 
 public class ProductosControllerTests
 {
+    private readonly IProductoService _productoService;
+
+    public ProductosControllerTests()
+    {
+        _productoService = new ProductoService();
+    }
+
     [Fact]
     public void Get_ReturnsOkResult()
     {
         // Arrange
-        var controller = new ProductosController();
+        var controller = new ProductosApiController(_productoService);
 
         // Act
         var result = controller.Get();
@@ -25,7 +34,7 @@ public class ProductosControllerTests
     public void Get_WithValidId_ReturnsOkResult()
     {
         // Arrange
-        var controller = new ProductosController();
+        var controller = new ProductosApiController(_productoService);
         int id = 1;
 
         // Act
@@ -40,7 +49,7 @@ public class ProductosControllerTests
     public void Get_WithInvalidId_ReturnsNotFound()
     {
         // Arrange
-        var controller = new ProductosController();
+        var controller = new ProductosApiController(_productoService);
         int id = 999;
 
         // Act
@@ -54,7 +63,7 @@ public class ProductosControllerTests
     public void Post_WithValidProducto_ReturnsCreatedAtAction()
     {
         // Arrange
-        var controller = new ProductosController();
+        var controller = new ProductosApiController(_productoService);
         var nuevoProducto = new Producto
         {
             Nombre = "Test Product",
@@ -76,7 +85,7 @@ public class ProductosControllerTests
     public void Post_WithNullProducto_ReturnsBadRequest()
     {
         // Arrange
-        var controller = new ProductosController();
+        var controller = new ProductosApiController(_productoService);
 
         // Act
         var result = controller.Post(null!);
