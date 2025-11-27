@@ -26,13 +26,13 @@ steps:
   - script: dotnet --info
     displayName: 'Información de .NET'
 
-  - script: dotnet restore $(proyecto)
+  - script: dotnet restore PracticaFinalCI_CD.sln
     displayName: 'dotnet restore'
 
-  - script: dotnet build --configuration $(buildConfiguration) $(proyecto) --no-restore
+  - script: dotnet build PracticaFinalCI_CD.sln --configuration $(buildConfiguration) --no-restore
     displayName: 'dotnet build $(buildConfiguration)'
 
-  - script: dotnet test --configuration $(buildConfiguration) --no-build --verbosity normal **/*Tests/*.csproj
+  - script: dotnet test PracticaFinalAPI.Tests/PracticaFinalAPI.Tests.csproj --configuration $(buildConfiguration) --no-build --verbosity normal
     displayName: 'Ejecutar Pruebas Unitarias'
     continueOnError: true
 
