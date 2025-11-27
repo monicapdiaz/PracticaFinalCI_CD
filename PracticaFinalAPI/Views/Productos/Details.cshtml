@@ -1,0 +1,39 @@
+@model Producto
+@{
+    ViewData["Title"] = "Detalles del Producto";
+}
+
+<div class="page-header">
+    <h2>Detalles del Producto</h2>
+    <a asp-action="Index" class="btn btn-secondary">← Volver a la Lista</a>
+</div>
+
+<div class="details-card">
+    <div class="detail-section">
+        <label>ID:</label>
+        <span>@Model.Id</span>
+    </div>
+    <div class="detail-section">
+        <label>Nombre:</label>
+        <span>@Model.Nombre</span>
+    </div>
+    <div class="detail-section">
+        <label>Descripción:</label>
+        <span>@Model.Descripcion</span>
+    </div>
+    <div class="detail-section">
+        <label>Precio:</label>
+        <span class="price">$@Model.Precio.ToString("N2")</span>
+    </div>
+    <div class="detail-section">
+        <label>Stock:</label>
+        <span class="stock @(Model.Stock > 0 ? "in-stock" : "out-of-stock")">
+            @Model.Stock unidades
+        </span>
+    </div>
+    <div class="detail-actions">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Editar</a>
+        <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger">Eliminar</a>
+    </div>
+</div>
+

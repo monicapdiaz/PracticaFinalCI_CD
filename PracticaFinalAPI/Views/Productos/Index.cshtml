@@ -1,0 +1,54 @@
+@model IEnumerable<Producto>
+@{
+    ViewData["Title"] = "Lista de Productos";
+}
+
+<div class="page-header">
+    <h2>Lista de Productos</h2>
+    <a asp-action="Create" class="btn btn-primary">
+        <span>+</span> Crear Nuevo Producto
+    </a>
+</div>
+
+@if (Model != null && Model.Any())
+{
+    <div class="products-grid">
+        @foreach (var producto in Model)
+        {
+            <div class="product-card">
+                <div class="product-header">
+                    <h3>@producto.Nombre</h3>
+                    <span class="product-id">ID: @producto.Id</span>
+                </div>
+                <div class="product-body">
+                    <p class="product-description">@producto.Descripcion</p>
+                    <div class="product-details">
+                        <div class="detail-item">
+                            <span class="label">Precio:</span>
+                            <span class="value price">$@producto.Precio.ToString("N2")</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Stock:</span>
+                            <span class="value stock @(producto.Stock > 0 ? "in-stock" : "out-of-stock")">
+                                @producto.Stock unidades
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="product-actions">
+                    <a asp-action="Details" asp-route-id="@producto.Id" class="btn btn-info">Ver Detalles</a>
+                    <a asp-action="Edit" asp-route-id="@producto.Id" class="btn btn-warning">Editar</a>
+                    <a asp-action="Delete" asp-route-id="@producto.Id" class="btn btn-danger">Eliminar</a>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="empty-state">
+        <p>No hay productos registrados.</p>
+        <a asp-action="Create" class="btn btn-primary">Crear Primer Producto</a>
+    </div>
+}
+

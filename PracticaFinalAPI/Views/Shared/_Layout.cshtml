@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Gestión de Productos</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="container">
+                <a class="navbar-brand" asp-controller="Productos" asp-action="Index">
+                    <h1>🛍 Gestión de Productos</h1>
+                </a>
+                <div class="navbar-links">
+                    <a asp-controller="Productos" asp-action="Index" class="nav-link">Productos</a>
+                    <a asp-controller="Productos" asp-action="Create" class="nav-link btn-primary">Nuevo Producto</a>
+                    <a href="/swagger" class="nav-link" target="_blank">API Docs</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success">
+                <span>✓</span> @TempData["SuccessMessage"]
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-error">
+                <span>✗</span> @TempData["ErrorMessage"]
+            </div>
+        }
+        @RenderBody()
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 - Práctica Final CI/CD - .NET Core 9</p>
+        </div>
+    </footer>
+
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
+
