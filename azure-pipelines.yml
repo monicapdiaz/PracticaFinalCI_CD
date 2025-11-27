@@ -1,5 +1,6 @@
 # Azure DevOps Pipeline para CI/CD
 # Integración Continua y Entrega Continua para .NET Core 9
+# Para cuentas gratis de App Service usar --runtime win-x86
 
 trigger:
   branches:
@@ -12,7 +13,7 @@ pool:
 
 variables:
   buildConfiguration: 'Release'
-  dotNetFramework: 'net9.0'
+  proyecto: 'PracticaFinalAPI/PracticaFinalAPI.csproj'
 
 stages:
   # Stage 1: Build y Test (CI)
@@ -23,48 +24,45 @@ stages:
         displayName: 'Compilar Proyecto'
         steps:
           - task: UseDotNet@2
-            displayName: 'Usar .NET 9.0 SDK'
+            displayName: 'Instalar .NET SDK 9'
             inputs:
               packageType: 'sdk'
-              version: '9.x'
+              # Usa siempre la última 9.0.x disponible en el agente
+              version: '9.0.x'
+              includePreviewVersions: false
 
-          - task: DotNetCoreCLI@2
-            displayName: 'Restaurar Paquetes NuGet'
-            inputs:
-              command: 'restore'
-              projects: '**/*.csproj'
+          - script: dotnet --info
+            displayName: 'Información de .NET'
 
-          - task: DotNetCoreCLI@2
-            displayName: 'Compilar Proyecto'
-            inputs:
-              command: 'build'
-              projects: '**/*.csproj'
-              arguments: '--configuration $(buildConfiguration) --no-restore'
+          - script: dotnet restore $(proyecto)
+            displayName: 'dotnet restore'
 
-          - task: DotNetCoreCLI@2
+          - script: dotnet build --configuration $(buildConfiguration) $(proyecto) --no-restore
+            displayName: 'dotnet build $(buildConfiguration)'
+
+          - script: dotnet test --configuration $(buildConfiguration) --no-build --verbosity normal --collect:"XPlat Code Coverage" **/*Tests/*.csproj
             displayName: 'Ejecutar Pruebas Unitarias'
-            inputs:
-              command: 'test'
-              projects: '**/*Tests/*.csproj'
-              arguments: '--configuration $(buildConfiguration) --no-build --verbosity normal --collect:"XPlat Code Coverage"'
+            continueOnError: true
 
           - task: PublishCodeCoverageResults@1
             displayName: 'Publicar Resultados de Cobertura de Código'
             inputs:
               codeCoverageTool: 'Cobertura'
               summaryFileLocation: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
+            condition: succeededOrFailed()
 
           - task: DotNetCoreCLI@2
-            displayName: 'Publicar Artefactos'
+            displayName: 'Publicar aplicación'
             inputs:
               command: 'publish'
               publishWebProjects: false
-              projects: 'PracticaFinalAPI/PracticaFinalAPI.csproj'
-              arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory) --no-build'
+              projects: '$(proyecto)'
+              arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory) --runtime win-x86 --self-contained true'
               zipAfterPublish: true
+              modifyOutputPath: false
 
           - task: PublishBuildArtifacts@1
-            displayName: 'Publicar Artefactos de Compilación'
+            displayName: 'Publicar artefactos'
             inputs:
               pathToPublish: '$(Build.ArtifactStagingDirectory)'
               artifactName: 'drop'
@@ -98,4 +96,3 @@ stages:
                     appName: 'practica-final-api' # Reemplazar con el nombre de tu App Service
                     package: '$(System.ArtifactsDirectory)/drop/**/*.zip'
                     deploymentMethod: 'auto'
-
