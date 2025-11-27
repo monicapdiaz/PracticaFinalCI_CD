@@ -53,24 +53,19 @@ steps:
       artifactName: 'drop'
       publishLocation: 'Container'
 
-  # Stage de Despliegue (CD) - Descomenta cuando configures la Service Connection de Azure
-  # Para configurar:
-  # 1. Ve a Project Settings > Service connections en Azure DevOps
-  # 2. Crea una conexión de tipo "Azure Resource Manager"
-  # 3. Reemplaza 'Azure-ServiceConnection' y 'practica-final-api' con tus valores reales
-  #
-  # - task: DownloadBuildArtifacts@0
-  #   displayName: 'Descargar Artefactos'
-  #   inputs:
-  #     buildType: 'current'
-  #     downloadType: 'single'
-  #     artifactName: 'drop'
-  #     downloadPath: '$(System.ArtifactsDirectory)'
-  #
-  # - task: AzureWebApp@1
-  #   displayName: 'Desplegar a Azure App Service'
-  #   inputs:
-  #     azureSubscription: 'Azure-ServiceConnection'
-  #     appName: 'practica-final-api'
-  #     package: '$(System.ArtifactsDirectory)/drop/**/*.zip'
-  #     deploymentMethod: 'auto'
+  # Stage de Despliegue (CD)
+  - task: DownloadBuildArtifacts@0
+    displayName: 'Descargar Artefactos'
+    inputs:
+      buildType: 'current'
+      downloadType: 'single'
+      artifactName: 'drop'
+      downloadPath: '$(System.ArtifactsDirectory)'
+
+  - task: AzureWebApp@1
+    displayName: 'Desplegar a Azure App Service'
+    inputs:
+      azureSubscription: 'Azure-ServiceConnection' # Reemplaza con el nombre exacto de tu Service Connection
+      appName: 'PracticaFinalAPI' # Nombre exacto del App Service (case-sensitive)
+      package: '$(System.ArtifactsDirectory)/drop/**/*.zip'
+      deploymentMethod: 'auto'
